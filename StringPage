@@ -1,0 +1,14 @@
+trylon StringPage
+superclass Page
+
+fields body content-type
+
+
+create: body content-type: content-type
+	this body = body
+	this content-type = content-type
+
+create: body
+	return create: body content-type: "text/html"
+
+

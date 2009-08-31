@@ -1,0 +1,35 @@
+trylon web-server-test
+
+main: args
+	try
+		page-mapper = Dictionary new
+		index-page = WebServer StringPage new: index-body
+		page-mapper["/"] = index-page
+		page-mapper["/index.html"] = index-page
+		page-mapper["/index.css"] = WebServer StringPage new: css-body
+
+		server = WebServer new: page-mapper
+		server run
+	else
+		send: exception message
+
+
+index-body = ¶
+	<html>
+	<head>
+	<title> Test Page </title>
+	<link rel="stylesheet" href="index.css" />
+	</head>
+	
+	<body>
+	<h2> Test Page </h2>
+	<p> Welcome to the test page! </p>
+	</body>
+	</html>
+
+css-body = ¶
+	html {
+		font-family: sans-serif;
+		}
+
+

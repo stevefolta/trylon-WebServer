@@ -1,0 +1,120 @@
+trylon WebServer
+
+fields page-mapper port not-found-body
+
+
+default-port = 8080
+
+
+create: page-mapper
+	create: page-mapper port: default-port
+
+create: page-mapper port: port
+	this page-mapper = page-mapper
+	this port = port
+	not-found-body = default-not-found-body
+
+
+run
+	listen-socket = nil
+
+	try
+		port = default-port
+		listen-socket = TCP Socket new: port
+		loop
+			connection-socket = nil
+			try
+				connection-socket = listen-socket accept
+				dialog-with: connection-socket
+				connection-socket close
+			else
+				send: exception message
+			if connection-socket
+				connection-socket close
+	else
+		send: exception message
+
+	if listen-socket
+		listen-socket close
+		listen-socket = nil
+
+
+dialog-with: socket
+	lines = socket lines
+	
+	# Parse the request line.
+	request-line = lines next
+	words = Trylon WordsLexer new: request-line
+	method = words next
+	uri = words next
+	http-version = words next
+
+	# Read the headers.
+	headers = Dictionary new
+	last-header-name = nil
+	loop
+		line = lines next
+		if line is-empty
+			break
+
+		if line starts-with: " " || line starts-with: "\t"
+			# Extending the last header.
+			if last-header-name == nil
+				# There was no last header!  Ignore the error.
+				continue
+			headers[last-header-name] += " " + line trimmed
+		else
+			words = Trylon WordsLexer new: line
+			name = words next
+			value = words remainder trimmed
+			if !name ends-with: ":"
+				# Bad header.
+				continue
+			name = name substr: 0 length: name length - 1
+			headers[name] = value
+			last-header-name = name
+
+	# Send the page.
+	if method != "GET" && method != "HEAD"
+		socket send: "HTTP/1.1 501 Not Implemented"
+		socket send: ""
+		socket close
+		return
+	
+	# Get the page.
+	page = page-mapper[uri]
+	if page == nil
+		socket send: "HTTP/1.1 404 Not Found"
+		socket send: "Connection: close"
+		socket send: ""
+		socket send: not-found-body
+		socket close
+		return
+	
+	# Reply headers.
+	# We skip "Date:" for now...
+	socket send: "HTTP/1.1 200 OK"
+	socket send: "Connection: close"
+	socket send: ("Content-Type: ", page content-type, "; charset=", page charset)
+	socket send: ""
+
+	# Page body.
+	if method == "GET"
+		page send-body-to: socket
+
+	socket close
+
+
+
+default-not-found-body = ¶
+	<html>
+	<head>
+	<title> Not Found </title>
+	</head>
+	
+	<body>
+	<h2> Not Found </h2>
+	<p> The requested page cannot be found. </p>
+	</body>
+	</html>
+

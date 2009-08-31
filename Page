@@ -1,0 +1,21 @@
+trylon Page
+
+
+send-body-to: socket
+	# Default: use "body".
+	socket send: body
+
+
+content-type
+	# Default: html.
+	return "text/html"
+
+
+charset
+	# Default: UTF-8.
+	return "UTF-8"
+
+
+body
+	virtual
+
