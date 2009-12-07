@@ -1,0 +1,8 @@
+trylon PostHandler
+
+handle-post: headers body-lines: lines on: socket
+	# The PostHandler must send the *entire* reply to the socket, including the
+	# first line, headers, and body.
+	virtual
+
+

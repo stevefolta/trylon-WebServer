@@ -1,6 +1,6 @@
 trylon WebServer
 
-fields page-mapper port not-found-body
+fields page-mapper post-mapper port not-found-body
 
 
 default-port = 8080
@@ -73,6 +73,11 @@ dialog-with: socket
 			name = name substr: 0 length: name length - 1
 			headers[name] = value
 			last-header-name = name
+	
+	# Handle "POST"s.
+	if method == "POST"
+		handle-post-to: uri headers: headers body: lines on: socket
+		return
 
 	# Send the page.
 	if method != "GET" && method != "HEAD"
@@ -102,6 +107,21 @@ dialog-with: socket
 	if method == "GET"
 		page send-body-to: socket
 
+	socket close
+
+
+handle-post-to: uri headers: headers body: body on: socket
+	handler = nil
+	if post-mapper
+		handler = post-mapper[uri]
+	if handler == nil
+		socket send: "HTTP/1.1 404 Not Found"
+		socket send: "Connection: close"
+		socket send: ""
+		socket close
+		return
+	
+	handler handle-post: headers body-lines: body on: socket
 	socket close
 
 
