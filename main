@@ -138,3 +138,8 @@ default-not-found-body = ¶
 	</body>
 	</html>
 
+
+references
+	# Suppress warning if a PostHandler isn't used.
+	PostHandler
+
