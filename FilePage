@@ -1,0 +1,34 @@
+trylon FilePage
+superclass Page
+
+fields path content-type
+
+default-content-type = "text/plain"
+
+content-types = 	--
+	(".html", "text/html"), 	--
+	(".css", "text/css"), 	--
+	(".js", "application/javascript"), 	--
+	(".png", "image/png"), 	--
+	(".jpg", "image/jpeg"), 	--
+	(".gif", "image/gif")
+
+
+create: path content-type: content-type
+	this path = path
+	this content-type = content-type
+
+create: path
+	this path = path
+
+	# Figure out the content type from the file extension.
+	content-type = default-content-type
+	for pair in content-types
+		if path ends-with: pair first
+			content-type = pair second
+			break
+
+body
+	return File contents-of: path
+
+
